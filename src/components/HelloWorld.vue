@@ -1,15 +1,15 @@
 <template>
   <div id="app">
     <ul class="todo-list">
-      <li
+      <!-- <li
         @dragover.prevent
         @drop="dragFinish(-1, $event)"
         v-if="dragging > -1"
         class="trash-drop todo-item"
         v-bind:class="{drag: isDragging}"
-      >Delete</li>
+      >Delete</li>-->
 
-      <li v-else>
+      <li>
         <input
           placeholder="Type new task and press enter"
           type="text"
@@ -98,21 +98,27 @@ export default {
       ev.dataTransfer.dropEffect = "move";
       this.dragging = which;
       this.todos[which]["dragging"] = true;
-      
-      var draggedElement = ev.srcElement;
-      var psuedoEle = document.createElement('div');
-      psuedoEle.innerHTML = draggedElement.innerHTML;
-      psuedoEle.id = 'draggedPsuedoEle';    
 
-      const computedStyle = window.getComputedStyle(draggedElement)
-      Array.from(computedStyle).forEach(key => psuedoEle.style.setProperty(key, computedStyle.getPropertyValue(key), computedStyle.getPropertyPriority(key)));
+      var draggedElement = ev.srcElement;
+      var psuedoEle = document.createElement("div");
+      psuedoEle.innerHTML = draggedElement.innerHTML;
+      psuedoEle.id = "draggedPsuedoEle";
+
+      const computedStyle = window.getComputedStyle(draggedElement);
+      Array.from(computedStyle).forEach(key =>
+        psuedoEle.style.setProperty(
+          key,
+          computedStyle.getPropertyValue(key),
+          computedStyle.getPropertyPriority(key)
+        )
+      );
 
       document.body.appendChild(psuedoEle);
 
       // hiding default ghost image
       var dragGhost = draggedElement.cloneNode(true);
-      dragGhost.classList.add('hidden-drag-ghost');
-      dragGhost.id = 'dragGhost';
+      dragGhost.classList.add("hidden-drag-ghost");
+      dragGhost.id = "dragGhost";
       document.body.appendChild(dragGhost);
       ev.dataTransfer.setDragImage(dragGhost, 0, 0);
 
@@ -123,8 +129,8 @@ export default {
     },
     dragEnter(ev) {
       var draggEnterElement = ev.srcElement;
-      draggEnterElement.classList.add('border-bottom');
-      
+      //draggEnterElement.classList.add('border-bottom');
+
       /* 
       if (ev.clientY > ev.target.height / 2) {
         ev.target.style.marginBottom = '10px'
@@ -135,9 +141,9 @@ export default {
     },
     dragLeave(ev) {
       var draggEnterElementTarget = ev.target;
-      draggEnterElementTarget.classList.remove('border-bottom');
+      draggEnterElementTarget.classList.remove("border-bottom");
       var draggEnterElement = ev.srcElement;
-      draggEnterElement.classList.remove('border-bottom');
+      draggEnterElement.classList.remove("border-bottom");
       /* 
       ev.target.style.marginTop = '2px'
       ev.target.style.marginBottom = '2px'
@@ -146,21 +152,20 @@ export default {
     dragEnd(ev) {
       //this.todos.splice(this.dragging, 1);
       this.dragging = -1;
-      
+
       var draggEnterElementTarget = ev.target;
-      draggEnterElementTarget.classList.remove('border-bottom');
+      draggEnterElementTarget.classList.remove("border-bottom");
       var draggEnterElement = ev.srcElement;
-      draggEnterElement.classList.remove('border-bottom');
-      
+      draggEnterElement.classList.remove("border-bottom");
 
       // remove element
-      var psuedoEle = document.getElementById('draggedPsuedoEle');
-      var dragghost = document.getElementById('dragGhost');
-    
-      if(psuedoEle) {
+      var psuedoEle = document.getElementById("draggedPsuedoEle");
+      var dragghost = document.getElementById("dragGhost");
+
+      if (psuedoEle) {
         psuedoEle.parentNode.removeChild(psuedoEle);
       }
-      if(dragghost) {
+      if (dragghost) {
         dragghost.parentNode.removeChild(dragghost);
       }
     },
@@ -171,13 +176,13 @@ export default {
       ev.target.style.marginBottom = "2px";
 
       // remove element
-      var psuedoEle = document.getElementById('draggedPsuedoEle');
-      if(psuedoEle) {
+      var psuedoEle = document.getElementById("draggedPsuedoEle");
+      if (psuedoEle) {
         psuedoEle.parentNode.removeChild(psuedoEle);
       }
 
-      var dragghost = document.getElementById('dragGhost');
-      if(dragghost) {
+      var dragghost = document.getElementById("dragGhost");
+      if (dragghost) {
         dragghost.parentNode.removeChild(dragghost);
       }
     },
@@ -189,16 +194,16 @@ export default {
       }
     },
     onDrag(event) {
-      var psuedoEle = document.getElementById('draggedPsuedoEle');
+      var psuedoEle = document.getElementById("draggedPsuedoEle");
 
-      if(psuedoEle) {
+      if (psuedoEle) {
         var xPos = event.clientX;
         var yPos = event.clientY;
 
-        psuedoEle.style.position = 'absolute';
-        psuedoEle.style.left = (xPos - psuedoEle.clientWidth / 2) + 'px';
-        psuedoEle.style.top = (yPos + 10 ) + 'px';
-        psuedoEle.style.opacity = '1';			      
+        psuedoEle.style.position = "absolute";
+        psuedoEle.style.left = xPos - psuedoEle.clientWidth / 2 + "px";
+        psuedoEle.style.top = yPos + 10 + "px";
+        psuedoEle.style.opacity = "1";
       }
     }
   },
@@ -208,7 +213,7 @@ export default {
     }
   },
   mounted() {
-    window.addEventListener('drag', this.onDrag);
+    window.addEventListener("drag", this.onDrag);
   }
 };
 </script>
@@ -238,7 +243,6 @@ body {
 }
 
 .trash-drop {
-
   text-align: center;
   color: #e33;
 }
