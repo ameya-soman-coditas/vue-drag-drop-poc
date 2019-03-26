@@ -20,21 +20,24 @@
       </li>
 
       <li
-        class="todo-item"
+        class="todo-wrapper"
         v-for="(item, i) in todos"
         v-bind:key="i"
-        draggable="true"
         @dragstart="dragStart(i, $event)"
         @dragover.prevent
         @dragenter="dragEnter"
         @dragleave="dragLeave"
         @dragend="dragEnd"
         @drop="dragFinish(i, $event)"
-        v-bind:class="{ active: item['dragging'] }"
       >
-        <input type="checkbox" v-model="item.done">
-        <span :class="{done: item.done}">{{ item.title }}</span>
-        <span class="remove-item" @click="removeItem(item)">x</span>
+        <div class="handles" v-bind:id="'handle'+i" @mousedown="addEventListener($event)">
+          <i class="fas fa-ellipsis-v"></i>
+          <i class="fas fa-ellipsis-v"></i>
+        </div>
+        <div class="todo-item">
+          <input type="checkbox" v-model="item.done">
+          <span :class="{done: item.done}">{{ item.title }}</span>
+        </div>
       </li>
     </ul>
   </div>
@@ -65,9 +68,7 @@ export default {
     this.todos = [
       {
         title: `It is a long established fact that a reader will be distracted by the readable 
-        content of a page when looking at its layout. The point of using Lorem Ipsum is that it 
-        has a more-or-less normal distribution of letters, as opposed to using 'Content here, 
-        content here', making it look like readable English.`,
+        content of a page when looking at its layout. `,
         done: false
       },
       {
@@ -77,6 +78,12 @@ export default {
     ];
   },
   methods: {
+    addEventListener(event) {
+      var todoItems = document.getElementsByClassName("todo-wrapper");
+      for (let i = 0; i < todoItems.length; i++) {
+        todoItems[i].setAttribute("draggable", true);
+      }
+    },
     addItem() {
       if (!this.newItem) {
         return;
@@ -100,6 +107,7 @@ export default {
       this.todos[which]["dragging"] = true;
 
       var draggedElement = ev.srcElement;
+      draggedElement.style.opacity = "0.4";
       var psuedoEle = document.createElement("div");
       psuedoEle.innerHTML = draggedElement.innerHTML;
       psuedoEle.id = "draggedPsuedoEle";
@@ -112,6 +120,10 @@ export default {
           computedStyle.getPropertyPriority(key)
         )
       );
+      console.log(ev);
+      psuedoEle.style.position = "absolute";
+      psuedoEle.style.top = "0px";
+      psuedoEle.style.left = "-100%";
 
       document.body.appendChild(psuedoEle);
 
@@ -121,42 +133,17 @@ export default {
       dragGhost.id = "dragGhost";
       document.body.appendChild(dragGhost);
       ev.dataTransfer.setDragImage(dragGhost, 0, 0);
-
-      // this.elementGettingDragged = JSON.parse(
-      //   JSON.stringify(this.todos[which])
-      // );
-      // this.todos.splice(which, 0, this.elementGettingDragged);
     },
-    dragEnter(ev) {
-      var draggEnterElement = ev.srcElement;
-      //draggEnterElement.classList.add('border-bottom');
-
-      /* 
-      if (ev.clientY > ev.target.height / 2) {
-        ev.target.style.marginBottom = '10px'
-      } else {
-        ev.target.style.marginTop = '10px'
-      }
-      */
-    },
-    dragLeave(ev) {
-      var draggEnterElementTarget = ev.target;
-      draggEnterElementTarget.classList.remove("border-bottom");
-      var draggEnterElement = ev.srcElement;
-      draggEnterElement.classList.remove("border-bottom");
-      /* 
-      ev.target.style.marginTop = '2px'
-      ev.target.style.marginBottom = '2px'
-      */
-    },
+    dragEnter(ev) {},
+    dragLeave(ev) {},
     dragEnd(ev) {
-      //this.todos.splice(this.dragging, 1);
       this.dragging = -1;
+      var todoItems = document.getElementsByClassName("todo-wrapper");
+      for (let i = 0; i < todoItems.length; i++) {
+        todoItems[i].setAttribute("draggable", false);
+      }
 
-      var draggEnterElementTarget = ev.target;
-      draggEnterElementTarget.classList.remove("border-bottom");
-      var draggEnterElement = ev.srcElement;
-      draggEnterElement.classList.remove("border-bottom");
+      ev.srcElement.style.opacity = "1";
 
       // remove element
       var psuedoEle = document.getElementById("draggedPsuedoEle");
@@ -174,6 +161,8 @@ export default {
       this.todos[to]["dragging"] = false;
       ev.target.style.marginTop = "2px";
       ev.target.style.marginBottom = "2px";
+
+      ev.srcElement.style.opacity = "1";
 
       // remove element
       var psuedoEle = document.getElementById("draggedPsuedoEle");
@@ -201,8 +190,8 @@ export default {
         var yPos = event.clientY;
 
         psuedoEle.style.position = "absolute";
-        psuedoEle.style.left = xPos - psuedoEle.clientWidth / 2 + "px";
-        psuedoEle.style.top = yPos + 10 + "px";
+        psuedoEle.style.left = xPos - 10 + "px";
+        psuedoEle.style.top = yPos + 2 + "px";
         psuedoEle.style.opacity = "1";
       }
     }
@@ -228,9 +217,20 @@ body {
   box-sizing: border-box;
 }
 
+.todo-wrapper {
+  display: flex;
+  padding: 8px 0;
+}
+
+.handles {
+  display: flex;
+  padding: 4px;
+}
+
 .todo-list {
   list-style-type: none;
-  padding: 10px;
+  padding: 10px 10px 40px 10px;
+  border: 1px solid rgba(2, 2, 2, 0.1);
 }
 
 .done {
@@ -259,6 +259,7 @@ body {
   background-color: #fff;
   box-shadow: 1px 2px 2px #ccc;
   font-size: 22px;
+  width: 100%;
 }
 
 .remove-item {
@@ -273,7 +274,7 @@ body {
 }
 
 .active {
-  opacity: 0.3;
+  opacity: 0.3 !important;
 }
 .hidden-drag-ghost {
   position: absolute;
@@ -285,8 +286,5 @@ body {
   border: none;
   box-shadow: none;
   outline: none;
-}
-li.border-bottom {
-  border: 4px solid red;
 }
 </style>
