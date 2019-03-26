@@ -22,7 +22,7 @@
       <li
         class="todo-item"
         v-for="(item, i) in todos"
-        v-key="i"
+        v-bind:key="i"
         draggable="true"
         @dragstart="dragStart(i, $event)"
         @dragover.prevent
@@ -98,12 +98,33 @@ export default {
       ev.dataTransfer.dropEffect = "move";
       this.dragging = which;
       this.todos[which]["dragging"] = true;
+      
+      var draggedElement = ev.srcElement;
+      var psuedoEle = document.createElement('div');
+      psuedoEle.innerHTML = draggedElement.innerHTML;
+      psuedoEle.id = 'draggedPsuedoEle';    
+
+      const computedStyle = window.getComputedStyle(draggedElement)
+      Array.from(computedStyle).forEach(key => psuedoEle.style.setProperty(key, computedStyle.getPropertyValue(key), computedStyle.getPropertyPriority(key)));
+
+      document.body.appendChild(psuedoEle);
+
+      // hiding default ghost image
+      var dragGhost = draggedElement.cloneNode(true);
+      dragGhost.classList.add('hidden-drag-ghost');
+      dragGhost.id = 'dragGhost';
+      document.body.appendChild(dragGhost);
+      ev.dataTransfer.setDragImage(dragGhost, 0, 0);
+
       // this.elementGettingDragged = JSON.parse(
       //   JSON.stringify(this.todos[which])
       // );
       // this.todos.splice(which, 0, this.elementGettingDragged);
     },
     dragEnter(ev) {
+      var draggEnterElement = ev.srcElement;
+      draggEnterElement.classList.add('border-bottom');
+      
       /* 
       if (ev.clientY > ev.target.height / 2) {
         ev.target.style.marginBottom = '10px'
@@ -113,6 +134,10 @@ export default {
       */
     },
     dragLeave(ev) {
+      var draggEnterElementTarget = ev.target;
+      draggEnterElementTarget.classList.remove('border-bottom');
+      var draggEnterElement = ev.srcElement;
+      draggEnterElement.classList.remove('border-bottom');
       /* 
       ev.target.style.marginTop = '2px'
       ev.target.style.marginBottom = '2px'
@@ -121,12 +146,40 @@ export default {
     dragEnd(ev) {
       //this.todos.splice(this.dragging, 1);
       this.dragging = -1;
+      
+      var draggEnterElementTarget = ev.target;
+      draggEnterElementTarget.classList.remove('border-bottom');
+      var draggEnterElement = ev.srcElement;
+      draggEnterElement.classList.remove('border-bottom');
+      
+
+      // remove element
+      var psuedoEle = document.getElementById('draggedPsuedoEle');
+      var dragghost = document.getElementById('dragGhost');
+    
+      if(psuedoEle) {
+        psuedoEle.parentNode.removeChild(psuedoEle);
+      }
+      if(dragghost) {
+        dragghost.parentNode.removeChild(dragghost);
+      }
     },
     dragFinish(to, ev) {
       this.moveItem(this.dragging, to);
       this.todos[to]["dragging"] = false;
       ev.target.style.marginTop = "2px";
       ev.target.style.marginBottom = "2px";
+
+      // remove element
+      var psuedoEle = document.getElementById('draggedPsuedoEle');
+      if(psuedoEle) {
+        psuedoEle.parentNode.removeChild(psuedoEle);
+      }
+
+      var dragghost = document.getElementById('dragGhost');
+      if(dragghost) {
+        dragghost.parentNode.removeChild(dragghost);
+      }
     },
     moveItem(from, to) {
       if (to === -1) {
@@ -134,12 +187,28 @@ export default {
       } else {
         this.todos.splice(to, 0, this.todos.splice(from, 1)[0]);
       }
+    },
+    onDrag(event) {
+      var psuedoEle = document.getElementById('draggedPsuedoEle');
+
+      if(psuedoEle) {
+        var xPos = event.clientX;
+        var yPos = event.clientY;
+
+        psuedoEle.style.position = 'absolute';
+        psuedoEle.style.left = (xPos - psuedoEle.clientWidth / 2) + 'px';
+        psuedoEle.style.top = (yPos + 10 ) + 'px';
+        psuedoEle.style.opacity = '1';			      
+      }
     }
   },
   computed: {
     isDragging() {
       return this.dragging > -1;
     }
+  },
+  mounted() {
+    window.addEventListener('drag', this.onDrag);
   }
 };
 </script>
@@ -169,7 +238,7 @@ body {
 }
 
 .trash-drop {
-  border: 2px dashed #ccc !important;
+
   text-align: center;
   color: #e33;
 }
@@ -201,5 +270,19 @@ body {
 
 .active {
   opacity: 0.3;
+}
+.hidden-drag-ghost {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0.01;
+  visibility: hidden;
+  overflow: hidden;
+  border: none;
+  box-shadow: none;
+  outline: none;
+}
+li.border-bottom {
+  border: 4px solid red;
 }
 </style>
