@@ -32,8 +32,8 @@
         v-bind:id="'todo-wrapper' + i"
       >
         <div class="handles" v-bind:id="'handle'+i" @mousedown="addEventListener($event)">
-          <i class="fas fa-ellipsis-v"></i>
-          <i class="fas fa-ellipsis-v"></i>
+          <i class="fa fa-ellipsis-v"></i>
+          <i class="fa fa-ellipsis-v"></i>
         </div>
         <div class="todo-item">
           <span :class="{done: item.done}">{{ item.title }}</span>
@@ -248,10 +248,20 @@ body {
   display: flex;
   padding: 8px 0;
 }
+.todo-wrapper:hover .handles {
+  opacity: 1 !important;
+}
 
 .handles {
+  opacity: 0 !important;
   display: flex;
-  padding: 0 4px;
+  padding: 0 4px; 
+}
+
+.handles i {
+  margin: 0 !important;
+  padding: 0 !important;
+  color: rgba(51, 51, 51,0.4);
 }
 
 .todo-list {
