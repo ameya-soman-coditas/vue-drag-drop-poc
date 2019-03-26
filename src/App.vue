@@ -17,6 +17,9 @@ export default {
 
 <style>
 @import url("https://use.fontawesome.com/releases/v5.8.1/css/all.css");
+body {
+  overflow: hidden;
+}
 #app {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
