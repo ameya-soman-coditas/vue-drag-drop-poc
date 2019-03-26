@@ -9,7 +9,7 @@
         v-bind:class="{drag: isDragging}"
       >Delete</li>-->
 
-      <li>
+      <!-- <li>
         <input
           placeholder="Type new task and press enter"
           type="text"
@@ -17,7 +17,7 @@
           v-model="newItem"
           @keyup.enter="addItem"
         >
-      </li>
+      </li>-->
 
       <li
         class="todo-wrapper"
@@ -25,17 +25,17 @@
         v-bind:key="i"
         @dragstart="dragStart(i, $event)"
         @dragover.prevent
-        @dragenter="dragEnter"
-        @dragleave="dragLeave"
+        @dragenter="dragEnter($event, i)"
+        @dragleave="dragLeave($event, i)"
         @dragend="dragEnd"
         @drop="dragFinish(i, $event)"
+        v-bind:id="'todo-wrapper' + i"
       >
         <div class="handles" v-bind:id="'handle'+i" @mousedown="addEventListener($event)">
           <i class="fas fa-ellipsis-v"></i>
           <i class="fas fa-ellipsis-v"></i>
         </div>
         <div class="todo-item">
-          <input type="checkbox" v-model="item.done">
           <span :class="{done: item.done}">{{ item.title }}</span>
         </div>
       </li>
@@ -67,15 +67,21 @@ export default {
     // `this` points to the vm instance
     this.todos = [
       {
-        title: `It is a long established fact that a reader will be distracted by the readable 
-        content of a page when looking at its layout. `,
+        title: `Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.`,
         done: false
       },
       {
-        title: `Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.`,
+        title: `Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of "de Finibus Bonorum et Malorum" (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, very popular during the Renaissance. The first line of Lorem Ipsum, "Lorem ipsum dolor sit amet..", comes from a line in section 1.10.32.
+
+The standard chunk of Lorem Ipsum used since the 1500s is reproduced below for those interested. Sections 1.10.32 and 1.10.33 from "de Finibus Bonorum et Malorum" by Cicero are also reproduced in their exact original form, accompanied by English versions from the 1914 translation by H. Rackha`,
+        done: false
+      },
+      {
+        title: `Contrary to popular belief, Lorem Ipsum is not simply random text.`,
         done: false
       }
     ];
+    this.activeTodoIndex = -1;
   },
   methods: {
     addEventListener(event) {
@@ -107,23 +113,26 @@ export default {
       this.todos[which]["dragging"] = true;
 
       var draggedElement = ev.srcElement;
-      draggedElement.style.opacity = "0.4";
-      var psuedoEle = document.createElement("div");
-      psuedoEle.innerHTML = draggedElement.innerHTML;
-      psuedoEle.id = "draggedPsuedoEle";
+      if (draggedElement) {
+        draggedElement.style.opacity = "0.4";
+        var psuedoEle = document.createElement("div");
+        psuedoEle.innerHTML = draggedElement.innerHTML;
+        psuedoEle.id = "draggedPsuedoEle";
 
-      const computedStyle = window.getComputedStyle(draggedElement);
-      Array.from(computedStyle).forEach(key =>
-        psuedoEle.style.setProperty(
-          key,
-          computedStyle.getPropertyValue(key),
-          computedStyle.getPropertyPriority(key)
-        )
-      );
-      console.log(ev);
+        const computedStyle = window.getComputedStyle(draggedElement);
+        Array.from(computedStyle).forEach(key =>
+          psuedoEle.style.setProperty(
+            key,
+            computedStyle.getPropertyValue(key),
+            computedStyle.getPropertyPriority(key)
+          )
+        );
+      }
+
       psuedoEle.style.position = "absolute";
       psuedoEle.style.top = "0px";
       psuedoEle.style.left = "-100%";
+      psuedoEle.classList.add("draggedItem");
 
       document.body.appendChild(psuedoEle);
 
@@ -134,14 +143,30 @@ export default {
       document.body.appendChild(dragGhost);
       ev.dataTransfer.setDragImage(dragGhost, 0, 0);
     },
-    dragEnter(ev) {},
-    dragLeave(ev) {},
+    dragEnter(ev, i) {
+      if (this.activeTodoIndex != i && this.activeTodoIndex != -1) {
+        document
+          .getElementById("todo-wrapper" + this.activeTodoIndex)
+          .classList.remove("borderBottom");
+      }
+      this.activeTodoIndex = i;
+      document.getElementById("todo-wrapper" + i).classList.add("borderBottom");
+    },
+    dragLeave(ev, i) {
+      if (this.activeTodoIndex != i) {
+        document
+          .getElementById("todo-wrapper" + i)
+          .classList.remove("borderBottom");
+      }
+    },
     dragEnd(ev) {
       this.dragging = -1;
       var todoItems = document.getElementsByClassName("todo-wrapper");
       for (let i = 0; i < todoItems.length; i++) {
         todoItems[i].setAttribute("draggable", false);
+        todoItems[i].classList.remove("borderBottom");
       }
+      this.activeTodoIndex = -1;
 
       ev.srcElement.style.opacity = "1";
 
@@ -164,8 +189,10 @@ export default {
 
       ev.srcElement.style.opacity = "1";
 
+      this.activeTodoIndex = -1;
       // remove element
       var psuedoEle = document.getElementById("draggedPsuedoEle");
+
       if (psuedoEle) {
         psuedoEle.parentNode.removeChild(psuedoEle);
       }
@@ -224,7 +251,7 @@ body {
 
 .handles {
   display: flex;
-  padding: 4px;
+  padding: 0 4px;
 }
 
 .todo-list {
@@ -252,14 +279,13 @@ body {
 }
 
 .todo-item {
-  border: 1px solid #ccc;
   border-radius: 2px;
-  padding: 14px 8px;
+  padding: 0px 8px;
   margin-bottom: 3px;
   background-color: #fff;
-  box-shadow: 1px 2px 2px #ccc;
   font-size: 22px;
   width: 100%;
+  text-align: left;
 }
 
 .remove-item {
@@ -286,5 +312,13 @@ body {
   border: none;
   box-shadow: none;
   outline: none;
+}
+
+.draggedItem .todo-item {
+  box-shadow: 1px 1px 2px 2px #ccc !important;
+}
+
+.borderBottom {
+  border-top: 2px solid darkgray;
 }
 </style>
